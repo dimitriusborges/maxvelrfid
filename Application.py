@@ -45,7 +45,6 @@ class Application:
             100: 50,
         }
 
-        self.l_registro = ["127.0.0.1", "20000"]  # reader to register vehicles
         self.l_posicao1 = ["127.0.0.1", "20001"]  # first reader for speed detector
         self.l_posicao2 = ["127.0.0.1", "20002"]  # second reader for speed detector
 
@@ -64,6 +63,14 @@ class Application:
 
         self.a9.close_con()
         return tag_list
+
+    def conf_antenas(self, ip, porta, antenas):
+        self.a9.open_con(ip, porta)
+        self.a9.login()
+
+        self.a9.set_antenas(antenas)
+
+        self.a9.close_con()
 
     def registrar_veiculo(self, placa, tag):
         """
@@ -129,7 +136,7 @@ class Application:
 
         plate = (self.db.read_veiculos(tag=tag)[0])[0]
 
-        self.db.insert_into_infracoes(plate, infr)
+        self.db.insert_into_infracoes(plate, tag, infr)
 
         self.db.close_con()
 
@@ -141,21 +148,21 @@ class Application:
 
         return result
 
-    def registrar_leitora(self, nome, ip, porta):
+    def registrar_leitora(self, nome, ip, porta, antena):
         """
         """
 
         self.db.open_con()
 
-        if self.db.insert_into_leitoras(nome, ip, porta) == 0:
+        if self.db.insert_into_leitoras(nome, ip, porta, antena) == 0:
             raise Exception("Registro já existe")
 
         self.db.close_con()
 
-    def atualizar_leitora(self, nome, ip, porta):
+    def atualizar_leitora(self, nome, ip, porta, antenas):
         self.db.open_con()
 
-        self.db.update_leitora(nome, ip, porta)
+        self.db.update_leitora(nome, ip, porta, antenas)
 
         self.db.close_con()
 
@@ -177,8 +184,6 @@ class Application:
         :return:
         """
 
-        buffer_tags = []    # save tags red on the first reader
-
         generated_time = self.gerar_time_span()
 
         # no bad behavior generated, no reading
@@ -187,7 +192,7 @@ class Application:
 
         else:
             # get tag passed on 1st reader
-            buffer_tags.append(self.ler_tags(self.l_posicao1[0], self.l_posicao1[1]))
+            buffer_tags = (self.ler_tags(self.l_posicao1[0], self.l_posicao1[1]))
 
             # velocity simulator
             start = time.time()
@@ -195,7 +200,13 @@ class Application:
             time_span = time.time() - start
 
             # get tag on 2nd reader
-            captured_tag = self.ler_tags(self.l_posicao2[0], self.l_posicao2[1])
+            captured_tags = self.ler_tags(self.l_posicao2[0], self.l_posicao2[1])
+
+            if len(captured_tags) > 1:
+                random_tag = random.choices(range(0, len(captured_tags)))[0]
+                captured_tag = captured_tags[random_tag]
+            else:
+                captured_tag = captured_tags[0]
 
             # if a tag passed on both readers, it generated an infraction
             if captured_tag in buffer_tags:
@@ -205,8 +216,7 @@ class Application:
                 infr_type = self.classificar_infr(infraction)
 
                 infr_output = "Infraction {}. Car took {:.2} seconds to travel {} meters. Should be {}.\n".format(infr_type, time_span, readers_dist, max_time_span)
-
-                self.registrar_infracao(captured_tag[0], infr_type)
+                self.registrar_infracao(captured_tag, infr_type)
 
                 return infr_output
 

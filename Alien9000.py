@@ -20,7 +20,7 @@ class Alien9000:
     def close_con(self):
         self.tn.close()
 
-    def login(self, user=LOGIN, password = PASSWORD):
+    def login(self, user=LOGIN, password=PASSWORD):
 
         self.tn.write(user.encode('ascii') + b"\n")
 
@@ -64,6 +64,24 @@ class Alien9000:
             ants_list.pop(0)
 
         return tags_list, ants_list
+
+    def set_antenas(self, num_antenas):
+        """
+
+        :param num_antenas:
+        :return:
+        """
+
+        total_ant = "set AntennaSequence=0,"
+
+        if num_antenas > 1:
+            for n in range(1, num_antenas):
+
+                total_ant += "{},".format(n)
+
+        total_ant = total_ant[:-1]
+        print(total_ant)
+        self.tn.write(total_ant.encode('ascii') + b'\n')
 
 
 if __name__ == "__main__":

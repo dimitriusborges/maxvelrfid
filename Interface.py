@@ -113,6 +113,10 @@ class CadastroVeiculo:
 
         self.list_box.delete(0, END)
 
+        if len(self.leitoras.get()) == 0:
+            messagebox.showwarning("Erro", "Antes, escolha uma leitora!", parent=self.this)
+            return
+
         leitora = self.app.get_leitoras_registradas(self.leitoras.get())[0]
 
         tags = self.app.ler_tags(leitora[1], leitora[2])
@@ -153,6 +157,10 @@ class CadastroVeiculo:
         self.leitoras.config(state='readonly')
 
     def cadastrar_veiculo(self):
+
+        if len(self.tag.get()) == 0 or len(self.placa.get()) == 0:
+            messagebox.showwarning("Erro", "Antes, preencha todos os campos corretamente", parent=self.this)
+            return
 
         tag = self.tag.get()
         placa = self.placa.get()
@@ -255,6 +263,13 @@ class CadastroLeitora:
         self.porta = Entry(main_frame, width=10)
         self.porta.grid(row=4, column=2, columnspan=2, padx=10, pady=5, sticky='w')
 
+        lbl_antenas = Label(main_frame, text="Nº Antenas:")
+        lbl_antenas.grid(row=5, column=0, columnspan=2, sticky='w')
+
+        self.antenas = Spinbox(main_frame, width=3, from_=1, to=4)
+        self.antenas.grid(row=5, column=2, columnspan=2, padx=10, pady=5, sticky='w')
+        self.antenas.config(state='readonly')
+
         bt_cadastrar = Button(main_frame, width=10, text="Cadastrar", command=self.cadastar_leitora)
         bt_cadastrar.grid(row=10, column=0, padx=10, pady=10, sticky='w')
 
@@ -268,7 +283,7 @@ class CadastroLeitora:
 
         ttk.Style().configure("Treeview", width=50)
 
-        self.tabela_leitoras['columns'] = '1', '2', '3'
+        self.tabela_leitoras['columns'] = '1', '2', '3', '4'
 
         self.tabela_leitoras.column('#1', width='100')
         self.tabela_leitoras.heading('#1', text='Nome')
@@ -279,12 +294,15 @@ class CadastroLeitora:
         self.tabela_leitoras.column('#3', width='100')
         self.tabela_leitoras.heading('#3', text='Porta')
 
-        self.tabela_leitoras.grid(row=5, column=0, columnspan=5, padx=5, pady=10)
+        self.tabela_leitoras.column('#4', width='100')
+        self.tabela_leitoras.heading('#4', text='Nº Antenas')
+
+        self.tabela_leitoras.grid(row=6, column=0, columnspan=5, padx=5, pady=10)
 
         self.tabela_leitoras.bind('<Double-Button-1>', self.load_da_tabela)
 
         scroll_bar_tree_vertical = Scrollbar(main_frame, relief='flat')
-        scroll_bar_tree_vertical.grid(row=5, column=6, sticky=('w', 'e', 'n', 's'))
+        scroll_bar_tree_vertical.grid(row=6, column=6, sticky=('w', 'e', 'n', 's'))
 
         self.tabela_leitoras.config(yscrollcommand=scroll_bar_tree_vertical.set)
         scroll_bar_tree_vertical.config(command=self.tabela_leitoras.yview)
@@ -293,22 +311,29 @@ class CadastroLeitora:
 
     def cadastar_leitora(self):
 
+        if len(self.leitora.get()) == 0 or len(self.ip.get()) == 0 or len(self.porta.get()) == 0:
+            messagebox.showwarning("Erro", "Antes, preencha todos os campos corretamente", parent=self.this)
+            return
+
         nome = self.leitora.get()
         ip = self.ip.get()
         porta = self.porta.get()
+        antenas = self.antenas.get()
 
         try:
-            self.app.registrar_leitora(nome, ip, porta)
+            self.app.registrar_leitora(nome, ip, porta, antenas)
+
         except:
 
-            op = messagebox.askyesno("Erro", "Esse veiculo já possui uma tag cadastrada, deseja atualizar?", parent=self.this)
+            op = messagebox.askyesno("Erro", "Essa leitora já possui um registro, deseja atualizar?", parent=self.this)
 
             if op is True:
-                self.app.atualizar_leitora(nome, ip, porta)
+                self.app.atualizar_leitora(nome, ip, porta, antenas)
             else:
                 self.clear_entries()
                 return
 
+        self.app.conf_antenas(ip, porta, int(antenas))
         messagebox.showinfo("Cadastro", "Cadastro realizado com sucesso!", parent=self.this)
 
         self.popular_tabela()
@@ -329,7 +354,7 @@ class CadastroLeitora:
         row = 0
         for registro in self.leitoras_cadastradas:
 
-            self.tabela_leitoras.insert("", row, iid=int(row), values=[registro[0], registro[1], registro[2]])
+            self.tabela_leitoras.insert("", row, iid=int(row), values=[registro[0], registro[1], registro[2], registro[3]])
 
             row += 1
 
@@ -363,6 +388,85 @@ class CadastroLeitora:
         self.ip.delete(0, END)
         self.porta.delete(0, END)
 
+    def open_window(self):
+        self.build_window()
+        self.this.mainloop()
+
+    def close_window(self):
+        self.this.destroy()
+
+
+class Registros:
+
+    def __init__(self, master):
+
+        self.this = Toplevel(master)
+        self.this.title("Registros")
+        self.this.resizable(False, False)
+
+        w = self.this.winfo_screenwidth()
+        h = self.this.winfo_screenheight()
+
+        x = (w - self.this.winfo_reqwidth()) / 2
+        y = (h - self.this.winfo_reqheight()) / 2
+
+        self.this.geometry("+%d+%d" % (x-150, y-150))
+
+        self.app = Application()
+
+        self.infracoes_cadastradas = []
+
+    def build_window(self):
+        """
+
+        :return:
+        """
+
+        main_frame = Frame(self.this)
+        main_frame.pack()
+
+        self.tabela_registros = ttk.Treeview(main_frame, selectmode="browse", show='headings')
+
+        ttk.Style().configure("Treeview", width=50)
+
+        self.tabela_registros['columns'] = '1', '2', '3'
+
+        self.tabela_registros.column('#1', width='100')
+        self.tabela_registros.heading('#1', text='Placa')
+
+        self.tabela_registros.column('#2', width='200')
+        self.tabela_registros.heading('#2', text='Tag')
+
+        self.tabela_registros.column('#3', width='100')
+        self.tabela_registros.heading('#3', text='Infração')
+
+        self.tabela_registros.grid(row=5, column=0, columnspan=5, padx=5, pady=10)
+
+        scroll_bar_tree_vertical = Scrollbar(main_frame, relief='flat')
+        scroll_bar_tree_vertical.grid(row=5, column=6, sticky=('w', 'e', 'n', 's'))
+
+        self.tabela_registros.config(yscrollcommand=scroll_bar_tree_vertical.set)
+        scroll_bar_tree_vertical.config(command=self.tabela_registros.yview)
+
+        self.popular_tabela()
+
+    def popular_tabela(self):
+        """
+
+        :return:
+        """
+
+        if len(self.tabela_registros.get_children()) > 0:
+            self.tabela_registros.delete(*self.tabela_registros.get_children())
+
+        self.infracoes_cadastradas = self.app.get_infracoes()
+
+        row = 0
+        for registro in self.infracoes_cadastradas:
+
+            self.tabela_registros.insert("", row, iid=int(row), values=[registro[0], registro[1], registro[2]])
+
+            row += 1
 
     def open_window(self):
         self.build_window()
@@ -422,6 +526,10 @@ class TelaPrincipal:
         sub_menu_cadastro.add_command(label="Leitoras", command=self.open_leitoras)
         upper_menu.add_cascade(menu=sub_menu_cadastro, label="Cadastro")
 
+        sub_menu_registros = Menu(upper_menu)
+        sub_menu_registros.add_command(label="Infrações", command=self.open_registros)
+        upper_menu.add_cascade(menu=sub_menu_registros, label="Registros")
+
         img = PhotoImage(file='dummy.png')
         self.graf = Label(main_frame, image=img)
         self.graf.image = img
@@ -453,6 +561,14 @@ class TelaPrincipal:
         janela_leitoras = CadastroLeitora(self.root)
         janela_leitoras.open_window()
 
+    def open_registros(self):
+        """
+
+        :return:
+        """
+        janela_reg = Registros(self.root)
+        janela_reg.open_window()
+
     def start_radar(self):
 
         self.debugg.insert(CURRENT, "Iniciando Simulação...\n")
@@ -470,7 +586,7 @@ class TelaPrincipal:
         infractions = self.app.get_infracoes()
 
         if len(infractions) > 0:
-            infr_counter = Counter(elem[1] for elem in infractions)
+            infr_counter = Counter(elem[2] for elem in infractions)
 
             labels = list(infr_counter.keys())
             counters = list(infr_counter.values())

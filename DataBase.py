@@ -47,6 +47,7 @@ class DataBase:
             """
             CREATE TABLE infracoes(
             placa TEXT NOT NULL,
+            tag TEXT NOT NULL,
             infr TEXT NOT NULL,
             FOREIGN KEY(placa) REFERENCES veiculos(placa));
             """
@@ -59,14 +60,15 @@ class DataBase:
             CREATE TABLE leitoras(
             nome TEXT NOT NULL PRIMARY KEY,
             IP TEXT NOT NULL,
-            porta TEXT NOT NULL);
+            porta TEXT NOT NULL,
+            antena TEXT NOT NULL);
             """
         )
 
-    def insert_into_leitoras(self, nome, ip, porta):
+    def insert_into_leitoras(self, nome, ip, porta, antena):
 
-        comando = "INSERT INTO leitoras (nome, ip, porta) VALUES(?,?,?)"
-        dados = nome, ip, porta
+        comando = "INSERT INTO leitoras (nome, ip, porta, antena) VALUES(?,?,?, ?)"
+        dados = nome, ip, porta, antena
 
         try:
             self.cursor.execute(comando, dados)
@@ -75,7 +77,7 @@ class DataBase:
 
         self.con.commit()
 
-    def update_leitora(self, nome, ip, porta):
+    def update_leitora(self, nome, ip, porta, antenas):
         """
 
         :param nome:
@@ -84,8 +86,8 @@ class DataBase:
         :return:
         """
 
-        command = "UPDATE leitoras set ip = (?), porta = (?) WHERE nome = (?)"
-        dados = (ip, porta, nome)
+        command = "UPDATE leitoras set ip = (?), porta = (?), antena = (?) WHERE nome = (?)"
+        dados = (ip, porta, antenas, nome)
         self.cursor.execute(command, dados)
         self.con.commit()
 
@@ -139,10 +141,10 @@ class DataBase:
 
         return self.cursor.fetchall()
 
-    def insert_into_infracoes(self, placa, infr):
+    def insert_into_infracoes(self, placa, tag, infr):
 
-        comando = "INSERT INTO infracoes (placa, infr) VALUES (?,?)"
-        dados = placa, infr
+        comando = "INSERT INTO infracoes (placa, tag, infr) VALUES (?,?, ?)"
+        dados = placa, tag, infr
 
         self.cursor.execute(comando, dados)
         self.con.commit()
