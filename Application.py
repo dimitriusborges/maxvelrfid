@@ -40,9 +40,9 @@ class Application:
         self.inf_all_types = [20, 49, 100]
         self.prob_inf_type = [0.3, 0.3, 0.3]
         self.lower_bound = {
-            20: 1,
-            49: 21,
-            100: 50,
+            20: 0,
+            49: 20,
+            100: 49,
         }
 
         self.l_posicao1 = ["127.0.0.1", "20001"]  # first reader for speed detector
@@ -251,16 +251,14 @@ class Application:
         :return:
         """
         print(f"Percent {infracao}")
-        if infracao < 1:
-            infracao = 1
-        elif infracao > 100:
+        if infracao > 100:
             infracao = 100
 
-        if self.lower_bound[self.inf_all_types[0]] <= infracao <= self.inf_all_types[0]:
+        if self.lower_bound[self.inf_all_types[0]] < infracao <= self.inf_all_types[0]:
             return "Tipo 1"
-        elif self.lower_bound[self.inf_all_types[1]] <= infracao <= self.inf_all_types[1]:
+        elif self.lower_bound[self.inf_all_types[1]] < infracao <= self.inf_all_types[1]:
             return "Tipo 2"
-        elif self.lower_bound[self.inf_all_types[2]] <= infracao <= self.inf_all_types[2]:
+        elif self.lower_bound[self.inf_all_types[2]] < infracao <= self.inf_all_types[2]:
             return "Tipo 3"
 
     def gerar_time_span(self):

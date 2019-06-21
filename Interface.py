@@ -580,6 +580,7 @@ class TelaPrincipal:
 
             if output is not None:
                 self.debugg.insert(END, output)
+                self.debugg.see(END)
                 self.plot_grafico()
 
             # time.sleep(1)
