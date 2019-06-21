@@ -38,7 +38,7 @@ class Application:
 
         self.prob_inf = [0.5, 0.5]
         self.inf_all_types = [20, 49, 100]
-        self.prob_inf_type = [0.6, 0.3, 0.1]
+        self.prob_inf_type = [0.3, 0.3, 0.3]
         self.lower_bound = {
             20: 1,
             49: 21,
@@ -187,6 +187,7 @@ class Application:
         generated_time = self.gerar_time_span()
 
         # no bad behavior generated, no reading
+        print(generated_time)
         if generated_time == 0:
             return None
 
@@ -249,6 +250,12 @@ class Application:
         :param infracao: size of the infraction, in %
         :return:
         """
+        print(f"Percent {infracao}")
+        if infracao < 1:
+            infracao = 1
+        elif infracao > 100:
+            infracao = 100
+
         if self.lower_bound[self.inf_all_types[0]] <= infracao <= self.inf_all_types[0]:
             return "Tipo 1"
         elif self.lower_bound[self.inf_all_types[1]] <= infracao <= self.inf_all_types[1]:

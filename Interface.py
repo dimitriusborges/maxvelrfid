@@ -351,7 +351,7 @@ class CadastroLeitora:
 
         self.leitoras_cadastradas = self.app.get_leitoras_registradas()
 
-        row = 0
+        row = 1
         for registro in self.leitoras_cadastradas:
 
             self.tabela_leitoras.insert("", row, iid=int(row), values=[registro[0], registro[1], registro[2], registro[3]])
@@ -365,7 +365,8 @@ class CadastroLeitora:
         :return:
         """
 
-        index = int(self.tabela_leitoras.selection()[0])
+        print(self.tabela_leitoras.selection())
+        index = int(self.tabela_leitoras.selection()[0]) - 1
 
         carro = self.leitoras_cadastradas[index]
 
@@ -580,6 +581,8 @@ class TelaPrincipal:
             if output is not None:
                 self.debugg.insert(END, output)
                 self.plot_grafico()
+
+            # time.sleep(1)
 
     def plot_grafico(self):
 
