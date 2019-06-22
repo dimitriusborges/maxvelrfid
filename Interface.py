@@ -6,7 +6,7 @@ from Application import Application
 from tkinter import messagebox
 import threading
 from collections import Counter
-import matplotlib as plt; plt.rcdefaults()
+import matplotlib as mp
 import matplotlib.pyplot as plt
 
 
@@ -25,6 +25,8 @@ class CadastroVeiculo:
         y = (h - self.this.winfo_reqheight()) / 2
 
         self.this.geometry("+%d+%d" % (x-150, y-150))
+
+        mp.use('TkAgg')
 
         self.carros_cadastrados = []
         self.leitora = ['leitora', '127.0.0.1', '20000']
@@ -500,8 +502,6 @@ class TelaPrincipal:
         self.thread_radar = threading.Thread(target=self.start_radar)
         self.thread_radar.setDaemon(True)
 
-        self.thread_grafico = threading.Thread(target=self.plot_grafico)
-        self.thread_grafico.setDaemon(True)
 
     def open_window(self):
 
@@ -573,7 +573,7 @@ class TelaPrincipal:
     def start_radar(self):
 
         self.debugg.insert(CURRENT, "Iniciando Simulação...\n")
-
+        self.fig = plt.figure()
         while 1:
 
             output = self.app.execute_radar()
@@ -598,15 +598,14 @@ class TelaPrincipal:
             labels = "Tipo 1", "Tipo 2", "tipo 3"
             counters = 0, 0, 0
 
-        plt.clf()
         plt.bar(labels, counters, align='center', alpha=0.5, color='b')
         plt.ylabel('Nº Ocorrências')
         plt.xlabel('Tipo de Infração')
         plt.title("Frequência de Infrações")
         plt.savefig('plot.png', transparent=True)
+        self.fig.clf()
 
         img = PhotoImage(file='plot.png')
-
         self.graf.image = img
         self.graf.config(image=img)
         self.graf.image = img

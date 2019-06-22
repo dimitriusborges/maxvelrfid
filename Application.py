@@ -36,9 +36,9 @@ class Application:
         self.db = DataBase()
         self.a9 = Alien9000()
 
-        self.prob_inf = [0.5, 0.5]
+        self.prob_inf = [0.7, 0.3]
         self.inf_all_types = [20, 49, 100]
-        self.prob_inf_type = [0.3, 0.3, 0.3]
+        self.prob_inf_type = [0.6, 0.3, 0.1]
         self.lower_bound = {
             20: 0,
             49: 20,
@@ -187,7 +187,6 @@ class Application:
         generated_time = self.gerar_time_span()
 
         # no bad behavior generated, no reading
-        print(generated_time)
         if generated_time == 0:
             return None
 
